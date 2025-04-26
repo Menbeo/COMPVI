@@ -28,6 +28,10 @@ game_duration = 30  # seconds
 background = pygame.image.load("bg.jpg")
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 
+# --- Load object image ---
+object_img = pygame.image.load("1.png")  # Đặt file object.png cùng thư mục
+object_img = pygame.transform.scale(object_img, (50, 50))  # Resize ảnh vật thể
+
 # --- Main Loop ---
 running = True
 while running:
@@ -49,8 +53,8 @@ while running:
     mouse_x, mouse_y = pygame.mouse.get_pos()
     pygame.draw.circle(screen, (0, 255, 0), (mouse_x, mouse_y), 30)
 
-    # --- Dummy Falling Object ---
-    pygame.draw.rect(screen, (255, 0, 0), (object_x, object_y, 30, 30))
+    # --- Falling Object (Image) ---
+    screen.blit(object_img, (object_x, object_y))
     object_y += fall_speed
     if object_y > HEIGHT:
         object_y = 0
