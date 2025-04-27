@@ -20,7 +20,7 @@ pygame.display.set_caption("Catch Your Professor!")
 font = pygame.font.SysFont('Arial', 24)
 
 # --- Camera setting ---
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 sw, sh = 640, 480
 cap.set(3, sw)
 cap.set(4, sh)
