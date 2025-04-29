@@ -28,7 +28,10 @@ cap.set(4, sh)
 # --- Dummy Falling Object ---
 object_x = np.random.randint(100, 700)
 object_y = 0
-fall_speed = 5
+fall_speed = 2
+speed_increase_interval = 5  # mỗi 5 giây tăng tốc 1 lần
+last_speed_update = 0
+
 
 # --- Score & Timer ---
 score = 0
@@ -181,6 +184,11 @@ with mp_hands.Hands(
             pygame.display.update()
             pygame.time.wait(3000)
             break
+        
+        # Tăng tốc độ rơi theo thời gian
+        if current_time - last_speed_update >= speed_increase_interval:
+            fall_speed += 0.2  # tăng nhẹ
+            last_speed_update = current_time
 
         pygame.display.update()
         pygame.time.Clock().tick(30)
