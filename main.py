@@ -59,11 +59,6 @@ hand_status = "OPEN"
 hand_x, hand_y = 0, 0
 catch_distance = 50  # khoảng cách tay - vật thể để bắt
 
-object_add_interval = 5  # mỗi 5 giây tăng thêm 1 object
-last_object_add_time = 0
-max_objects = 50  # giới hạn tối đa để tránh lag
-
-
 # --- MediaPipe Hands ---
 with mp_hands.Hands(
     min_detection_confidence=0.5,
@@ -71,16 +66,6 @@ with mp_hands.Hands(
 
     running = True
     prev_hand_status = {}  # key = hand index (0, 1), value = 'OPEN' or 'Closed'
-
-    # --- Countdown before game starts ---
-    countdown_font = pygame.font.SysFont('Arial', 72)
-    for i in range(3, 0, -1):
-        screen.blit(background, (0, 0))
-        countdown_text = countdown_font.render(str(i), True, (255, 0, 0))
-        screen.blit(countdown_text, (WIDTH // 2 - 20, HEIGHT // 2 - 50))
-        pygame.display.update()
-        pygame.time.wait(3000)  # wait 3 second
-
 
     while running:
         screen.blit(background, (0, 0))
@@ -148,13 +133,6 @@ with mp_hands.Hands(
             screen.blit(object_img, (obj_x, obj_y))
             obj_y += fall_speed
             objects[i][1] = obj_y
-        
-        # --- Increase number of falling objects over time ---
-        if current_time - last_object_add_time >= object_add_interval and len(objects) < max_objects:
-            new_object = [np.random.randint(100, 700), np.random.randint(-600, 0)]
-            objects.append(new_object)
-            last_object_add_time = current_time
-
 
         for i in range(len(objects)):
             obj_x, obj_y = objects[i]
@@ -162,33 +140,33 @@ with mp_hands.Hands(
             obj_y += fall_speed
             objects[i][1] = obj_y
 
-# --- Update and draw objects ---
-for i in range(len(objects)):
-    obj_x, obj_y = objects[i]
-    screen.blit(object_img, (obj_x, obj_y))
-    obj_y += fall_speed
-    objects[i][1] = obj_y
+            # --- Check Catch with both hands ---
+            for i in range(len(objects)):
+                obj_x, obj_y = objects[i]
+                screen.blit(object_img, (obj_x, obj_y))
+                obj_y += fall_speed
+                objects[i][1] = obj_y
 
-    # --- Check Catch with both hands ---
-    for hand in hand_positions:
-        dx = hand['x'] - (obj_x + 25)
-        dy = hand['y'] - (obj_y + 25)
-        distance = math.hypot(dx, dy)
+                for hand in hand_positions:
+                    dx = hand['x'] - (obj_x + 25)
+                    dy = hand['y'] - (obj_y + 25)
+                    distance = math.hypot(dx, dy)
 
-        if (
-            distance < catch_distance and
-            hand['status'] == "Closed" and
-            hand['prev_status'] == "OPEN"
-        ):
-            score += 1
-            print(f"Caught! Score: {score}")
-            objects[i] = [np.random.randint(100, 700), np.random.randint(-600, 0)]
-            break
+                    # Chỉ tính bắt nếu tay gần object và vừa chuyển từ OPEN -> Closed
+                    if (
+                        distance < catch_distance and
+                        hand['status'] == "Closed" and
+                        hand['prev_status'] == "OPEN"
+                    ):
+                        score += 1
+                        print(f"Caught! Score: {score}")
+                        objects[i] = [np.random.randint(100, 700), np.random.randint(-600, 0)]
+                        break
 
-    # --- If falls out of screen ---
-    if obj_y > HEIGHT:
-        objects[i] = [np.random.randint(100, 700), np.random.randint(-600, 0)]
 
+            # --- If falls out of screen ---
+            if obj_y > HEIGHT:
+                objects[i] = [np.random.randint(100, 700), np.random.randint(-600, 0)]
 
 
         # --- Score + Timer ---
