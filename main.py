@@ -62,6 +62,8 @@ with mp_hands.Hands(
     min_tracking_confidence=0.5) as hands:
 
     running = True
+    prev_hand_status = {}  # key = hand index (0, 1), value = 'OPEN' or 'Closed'
+
     while running:
         screen.blit(background, (0, 0))
 
@@ -85,24 +87,32 @@ with mp_hands.Hands(
         hand_positions = []  # reset mỗi frame
 
         if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
+            for idx, hand_landmarks in enumerate(results.multi_hand_landmarks):
                 x9, y9 = hand_landmarks.landmark[9].x * sw, hand_landmarks.landmark[9].y * sh
                 x12, y12 = hand_landmarks.landmark[12].x * sw, hand_landmarks.landmark[12].y * sh
 
                 hand_px = int(x9 / sw * WIDTH)
                 hand_py = int(y9 / sh * HEIGHT)
 
-                if y12 > y9:
-                    status = "Closed"
-                else:
-                    status = "OPEN"
+                status = "Closed" if y12 > y9 else "OPEN"
+                prev_status = prev_hand_status.get(idx, "OPEN")  # mặc định OPEN nếu chưa có
 
-                hand_positions.append({'x': hand_px, 'y': hand_py, 'status': status})
+                hand_positions.append({
+                    'x': hand_px,
+                    'y': hand_py,
+                    'status': status,
+                    'prev_status': prev_status,
+                    'index': idx
+                })
 
-                # Vẽ keypoints
+                # Cập nhật trạng thái mới nhất
+                prev_hand_status[idx] = status
+
+                # Vẽ tay
                 cv2.circle(image, (int(x9), int(y9)), 10, (0, 255, 0), -1)
                 cv2.circle(image, (int(x12), int(y12)), 10, (0, 0, 255), -1)
                 cv2.putText(image, status, (int(x9), int(y9 - 20)), 0, 1, (255, 0, 0), 2)
+
 
 
         # --- Show camera feed separately ---
@@ -127,16 +137,29 @@ with mp_hands.Hands(
             obj_y += fall_speed
             objects[i][1] = obj_y
 
-            for hand in hand_positions:
-                dx = hand['x'] - (obj_x + 25)
-                dy = hand['y'] - (obj_y + 25)
-                distance = math.hypot(dx, dy)
+            # --- Check Catch with both hands ---
+            for i in range(len(objects)):
+                obj_x, obj_y = objects[i]
+                screen.blit(object_img, (obj_x, obj_y))
+                obj_y += fall_speed
+                objects[i][1] = obj_y
 
-                if distance < catch_distance and hand['status'] == "Closed":
-                    score += 1
-                    print(f"Caught! Score: {score}")
-                    objects[i] = [np.random.randint(100, 700), np.random.randint(-600, 0)]
-                    break  # Không cần kiểm tra tay còn lại nếu đã bắt
+                for hand in hand_positions:
+                    dx = hand['x'] - (obj_x + 25)
+                    dy = hand['y'] - (obj_y + 25)
+                    distance = math.hypot(dx, dy)
+
+                    # Chỉ tính bắt nếu tay gần object và vừa chuyển từ OPEN -> Closed
+                    if (
+                        distance < catch_distance and
+                        hand['status'] == "Closed" and
+                        hand['prev_status'] == "OPEN"
+                    ):
+                        score += 1
+                        print(f"Caught! Score: {score}")
+                        objects[i] = [np.random.randint(100, 700), np.random.randint(-600, 0)]
+                        break
+
 
             # --- If falls out of screen ---
             if obj_y > HEIGHT:
