@@ -7,6 +7,16 @@ import time
 import math
 import os
 
+# --- Sound ---
+pygame.init()
+pygame.mixer.init()
+bg_sfx = pygame.mixer.Sound("background_music.mp3")
+bg_sfx.set_volume(0.3)
+
+
+# --- Game Level ---
+current_level = 1 
+
 # --- Init MediaPipe ---
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -27,15 +37,19 @@ cap.set(4, sh)
 # --- Load background and object image ---
 background = pygame.image.load("bg.jpg")
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
-object_img = pygame.image.load("duongpm.png")
-object_img = pygame.transform.scale(object_img, (50, 50))
+object_img = pygame.image.load('duongpm.png')
+object_img = pygame.transform.scale(object_img, (50, 50)) 
 
-# --- Functions ---
+# --- Falling Obstacles Images ---
+obstacles_img = ['F.png', 'kahoot.png'] 
+obstacles_img2 = ['quanle.png', 'vinhlinh.png'] 
+unwanted_img = [pygame.transform.scale(pygame.image.load(img), (90, 60)) for img in obstacles_img]
+unwanted_img2 = [pygame.transform.scale(pygame.image.load(img), (20, 10)) for img in obstacles_img]
+
+# --- Player Name ---
 def ask_player_name():
     input_box = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2, 200, 40)
-    color_inactive = pygame.Color('lightskyblue3')
-    color_active = pygame.Color('dodgerblue2')
-    color = color_active
+    color = pygame.Color('dodgerblue2')
     text = ''
     done = False
 
@@ -65,8 +79,9 @@ def ask_player_name():
         pygame.display.flip()
         pygame.time.Clock().tick(30)
 
+# --- Score Functions ---
 def show_high_scores():
-    screen.blit("bg.jpg", (0,0))
+    screen.blit(background, (0,0))
     title = font.render("High Scores", True, (255, 0, 0))
     screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
 
@@ -85,7 +100,8 @@ def save_score(name, score):
     with open("highscores.txt", "a") as f:
         f.write(f"{name}:{score}\n")
 
-# --- Player Name ---
+# --- Initialize Player Name ---
+bg_sfx.play(loops=-1)
 player_name = ask_player_name()
 
 # --- Game Variables ---
@@ -99,18 +115,40 @@ hand_status = "OPEN"
 hand_x, hand_y = 0, 0
 catch_distance = 50
 
+# --- Initialize Falling Obstacles ---
+num_obstacles = 10
+falling_obstacles = []
+
+def generate_obstacles(num, base_speed):
+    obstacles = []
+    for i in range(num // 2): 
+        obstacles.append({
+            'image': unwanted_img[i % len(unwanted_img)],
+            'x': np.random.randint(100, 700),
+            'y': -60 * (i + 1),  
+            'fall_speed': base_speed + (i % 3)
+        })
+    for i in range(num // 2, num):
+        obstacles.append({
+            'image': unwanted_img2[i % len(unwanted_img2)],  # Using the second set of obstacles
+            'x': np.random.randint(100, 700),
+            'y': -60 * (i - num // 2 + 1) + 150,  # Adjust for second row (add offset for falling lower)
+            'fall_speed': base_speed + (i % 3)
+        })
+    return obstacles
+
+falling_obstacles = generate_obstacles(num_obstacles, 3)
+
 # --- Main Game Loop ---
 with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
     running = True
     while running:
         screen.blit(background, (0, 0))
 
-        # --- Pygame Events ---
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        # --- Webcam Frame ---
         ret, frame = cap.read()
         if not ret:
             break
@@ -133,10 +171,7 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
                 hand_y = int(y9 / sh * HEIGHT)
 
                 hand_status = "Closed" if y12 > y9 else "OPEN"
-                cv2.circle(image, (int(x9), int(y9)), 10, (0, 255, 0), -1)
-                cv2.circle(image, (int(x12), int(y12)), 10, (0, 0, 255), -1)
 
-        # --- Show Webcam ---
         cv2.imshow('MediaPipe Hands', image)
 
         # --- Draw Hand & Object ---
@@ -144,7 +179,7 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
         screen.blit(object_img, (object_x, object_y))
         object_y += fall_speed
 
-        # --- Catch Detection ---
+        # --- Catch Main Object ---
         dx = hand_x - (object_x + 25)
         dy = hand_y - (object_y + 25)
         distance = math.hypot(dx, dy)
@@ -157,6 +192,40 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
         if object_y > HEIGHT:
             object_y = 0
             object_x = np.random.randint(100, 700)
+
+        # --- Falling Obstacles ---
+        for obstacle in falling_obstacles:
+            obstacle['y'] += obstacle['fall_speed']
+            screen.blit(obstacle['image'], (obstacle['x'], obstacle['y']))
+
+            dx_ob = hand_x - (obstacle['x'] + 45)
+            dy_ob = hand_y - (obstacle['y'] + 30)
+            dist_ob = math.hypot(dx_ob, dy_ob)
+
+            if dist_ob < catch_distance and hand_status == "Closed":
+                score -= 1
+                obstacle['y'] = -60
+                obstacle['x'] = np.random.randint(100, 700)
+
+            if obstacle['y'] > HEIGHT:
+                obstacle['y'] = -60
+                obstacle['x'] = np.random.randint(100, 700)
+
+        # --- LEVEL UP ---
+        if current_level == 1 and score > 10:
+
+            current_level = 2
+            game_duration  = game_duration - 10
+            fall_speed += 1
+            falling_obstacles += generate_obstacles(5, 4)
+            print("Level 2")
+
+        if current_level == 2 and score > 20:
+            current_level = 3
+            fall_speed += 2
+            game_duration = game_duration - 10
+            falling_obstacles += generate_obstacles(5, 5)
+            print("Level 3")
 
         # --- Score and Timer ---
         current_time = int(time.time() - start_time)
@@ -175,11 +244,11 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
         pygame.display.update()
         pygame.time.Clock().tick(30)
 
-        # Exit with ESC
+
         if cv2.waitKey(1) & 0xFF == 27:
             break
 
-# --- Cleanup ---
+# # --- Cleanup ---
 cap.release()
 cv2.destroyAllWindows()
 pygame.quit()
