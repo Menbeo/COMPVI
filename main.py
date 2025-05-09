@@ -41,8 +41,7 @@ object_img = pygame.image.load('duongpm.png')
 object_img = pygame.transform.scale(object_img, (50, 50)) 
 
 # --- Falling Obstacles Images ---
-obstacles_img = ['F.png', 'kahoot.png'] 
-obstacles_img2 = ['quanle.png', 'vinhlinh.png'] 
+obstacles_img = ['F.png', 'kahoot.png', 'quanle.png'] 
 unwanted_img = [pygame.transform.scale(pygame.image.load(img), (90, 60)) for img in obstacles_img]
 unwanted_img2 = [pygame.transform.scale(pygame.image.load(img), (20, 10)) for img in obstacles_img]
 
@@ -120,22 +119,12 @@ num_obstacles = 10
 falling_obstacles = []
 
 def generate_obstacles(num, base_speed):
-    obstacles = []
-    for i in range(num // 2): 
-        obstacles.append({
-            'image': unwanted_img[i % len(unwanted_img)],
-            'x': np.random.randint(100, 700),
-            'y': -60 * (i + 1),  
-            'fall_speed': base_speed + (i % 3)
-        })
-    for i in range(num // 2, num):
-        obstacles.append({
-            'image': unwanted_img2[i % len(unwanted_img2)],  # Using the second set of obstacles
-            'x': np.random.randint(100, 700),
-            'y': -60 * (i - num // 2 + 1) + 150,  # Adjust for second row (add offset for falling lower)
-            'fall_speed': base_speed + (i % 3)
-        })
-    return obstacles
+    return [{
+        'image': unwanted_img[i % len(unwanted_img)],
+        'x': np.random.randint(100, 700),
+        'y': -60 * (i + 1),
+        'fall_speed': base_speed + (i % 3)
+    } for i in range(num)]
 
 falling_obstacles = generate_obstacles(num_obstacles, 3)
 
