@@ -35,6 +35,10 @@ score = 0
 start_time = time.time()
 game_duration = 30  # seconds
 
+#Scoreboard
+def show_scoreboard(display_surface, clock):
+    scoreboard_surface = font.render('Scoreboard:', True, 'red')
+    scoreboard_position = (0,0)
 # --- Load background and object image ---
 background = pygame.image.load("bg.jpg")
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
