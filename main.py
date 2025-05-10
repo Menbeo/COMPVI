@@ -22,7 +22,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
 # --- Init Pygame ---
-pygame.init()
+# pygame.init()
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Catch Your Professor!")
@@ -41,9 +41,8 @@ object_img = pygame.image.load('duongpm.png')
 object_img = pygame.transform.scale(object_img, (50, 50)) 
 
 # --- Falling Obstacles Images ---
-obstacles_img = ['F.png', 'kahoot.png', 'quanle.png'] 
+obstacles_img = ['F.png', 'kahoot.png'] 
 unwanted_img = [pygame.transform.scale(pygame.image.load(img), (90, 60)) for img in obstacles_img]
-unwanted_img2 = [pygame.transform.scale(pygame.image.load(img), (20, 10)) for img in obstacles_img]
 
 # --- Player Name ---
 def ask_player_name():
@@ -131,6 +130,7 @@ falling_obstacles = generate_obstacles(num_obstacles, 3)
 # --- Main Game Loop ---
 with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
     running = True
+    prev_hand_status = {}  # key = hand index (0, 1), value = 'OPEN' or 'Closed'
     while running:
         screen.blit(background, (0, 0))
 
@@ -147,6 +147,8 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
         results = hands.process(image)
         image.flags.writeable = True
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        #hand position - reset 
+        hand_positions = []  # reset mỗi frame
 
         # --- Hand Tracking ---
         if results.multi_hand_landmarks:
@@ -160,8 +162,17 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
                 hand_y = int(y9 / sh * HEIGHT)
 
                 hand_status = "Closed" if y12 > y9 else "OPEN"
+                prev_status = prev_hand_status.get(hand_landmarks, "OPEN")  # mặc định OPEN nếu chưa có
+                hand_positions.append({
+                    'x': hand_x,
+                    'y': hand_y,
+                    'status': hand_status,
+                    'prev_status': prev_status,
+                    'index': hand_landmarks
+                })
+                prev_hand_status[hand_landmarks] = hand_status
 
-        cv2.imshow('MediaPipe Hands', image)
+        # cv2.imshow('MediaPipe Hands', image)
 
         # --- Draw Hand & Object ---
         pygame.draw.circle(screen, (0, 255, 0), (hand_x, hand_y), 30)
@@ -241,4 +252,4 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
 cap.release()
 cv2.destroyAllWindows()
 pygame.quit()
-sys.exit()
+# sys.exit()
