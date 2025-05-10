@@ -115,7 +115,7 @@ last_speed_update = 0
 catch_distance = 50
 score = 0
 start_time = time.time()
-game_duration = 45
+game_duration = 50
 
 # --- Object Initialization ---
 objects = [[np.random.randint(100, 700), np.random.randint(-600, 0)] for _ in range(num_objects)]
