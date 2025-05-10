@@ -190,17 +190,21 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
             for hand in hand_positions:
                 dx = hand['x'] - (ux + 45)
                 dy = hand['y'] - (uy + 30)
-                if math.hypot(dx, dy) < catch_distance and hand['prev_status'] == "OPEN":
-                    wrong_sfx.play()
-                    lives -=1
-                    unwanted_objects[i] = [np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))]
-                    if lives <= 0: 
-                        game_over = font.render("Out of Lives! Game Over", True, (255, 0, 0))
-                        screen.blit(game_over, (WIDTH // 2 - 150, HEIGHT // 2))
-                        pygame.display.update()
-                        pygame.time.wait(3000)
-                        running = False
-                    break
+                # Check if the hand is within the catch distance
+                if math.hypot(dx, dy) < catch_distance:
+                    # Check if the hand is either open or closed
+                    if hand['status'] == "Closed" or hand['status'] == "OPEN":
+                        wrong_sfx.play()  # Play the wrong sound effect
+                        lives -= 1  # Reduce lives
+                        unwanted_objects[i] = [np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))]
+                        
+                        if lives <= 0:  # Check if lives run out
+                            game_over = font.render("Out of Lives! Game Over", True, (255, 0, 0))
+                            screen.blit(game_over, (WIDTH // 2 - 150, HEIGHT // 2))
+                            pygame.display.update()
+                            pygame.time.wait(3000)
+                            running = False
+                        break
 
             if uy > HEIGHT:
                 unwanted_objects[i] = [np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))]
