@@ -208,6 +208,8 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
         if current_level == 1 and score > 4: 
             #display the level 
             screen.blit(font.render("Level 2!", True, (255, 0, 0)), (WIDTH // 2 - 80, HEIGHT // 2))
+            pygame.display.update()
+            pygame.time.wait(2000)
             current_level = 2
             game_duration -= 10
             fall_speed += 1
@@ -216,6 +218,8 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
             
         if current_level == 2 and score > 8: 
             screen.blit(font.render("Level 3!", True, (255, 0, 0)), (WIDTH // 2 - 80, HEIGHT // 2))
+            pygame.display.update()
+            pygame.time.wait(2000)
             current_level = 3 
             fall_speed += 2 
             game_duration -= 10
