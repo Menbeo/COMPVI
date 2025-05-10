@@ -35,7 +35,7 @@ cap.set(3, sw)
 cap.set(4, sh)
 
 # --- Load background and object image ---
-background = pygame.image.load("bg.jpg")
+background = pygame.image.load("bg.png")
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 object_img = pygame.image.load('duongpm.png')
 object_img = pygame.transform.scale(object_img, (50, 50)) 

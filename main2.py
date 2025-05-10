@@ -39,7 +39,26 @@ cap = cv2.VideoCapture(0)
 sw, sh = 640, 480
 cap.set(3, sw)
 cap.set(4, sh)
+# --- HIGHSCORE ----
+def show_high_scores():
+    screen.blit(background, (0,0))
+    title = font.render("High Scores", True, (255, 0, 0))
+    screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
 
+    if os.path.exists("highscores.txt"):
+        with open("highscores.txt", "r") as f:
+            lines = f.readlines()
+            sorted_scores = sorted([line.strip().split(":") for line in lines], key=lambda x: int(x[1]), reverse=True)[:5]
+            for i, (name, score) in enumerate(sorted_scores):
+                line = font.render(f"{i+1}. {name} - {score}", True, (0, 0, 0))
+                screen.blit(line, (WIDTH // 2 - line.get_width() // 2, 100 + i * 40))
+
+    pygame.display.flip()
+    pygame.time.wait(5000)
+
+def save_score(name, score):
+    with open("highscores.txt", "a") as f:
+        f.write(f"{name}:{score}\n")
 # --- Load Images ---
 background = pygame.image.load("bg.png")
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
@@ -96,7 +115,7 @@ last_speed_update = 0
 catch_distance = 50
 score = 0
 start_time = time.time()
-game_duration = 30
+game_duration = 45
 
 # --- Object Initialization ---
 objects = [[np.random.randint(100, 700), np.random.randint(-600, 0)] for _ in range(num_objects)]
@@ -121,22 +140,26 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
             break
         frame = cv2.flip(frame, 1)
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        image.flags.writeable = False
         results = hands.process(image)
+        image.flags.writeable = True
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
         # --- Hand Tracking ---
         hand_positions = []
+
         if results.multi_hand_landmarks:
             for idx, hand_landmarks in enumerate(results.multi_hand_landmarks):
                 x9, y9 = hand_landmarks.landmark[9].x * sw, hand_landmarks.landmark[9].y * sh
+                cv2.circle(image, (int(x9), int(y9)), 10, (0, 255, 0), -1)
                 x12, y12 = hand_landmarks.landmark[12].x * sw, hand_landmarks.landmark[12].y * sh
+                cv2.circle(image, (int(x12), int(y12)), 10, (0, 0, 255), -1)
                 hand_px = int(x9 / sw * WIDTH)
                 hand_py = int(y9 / sh * HEIGHT)
                 status = "Closed" if y12 > y9 else "OPEN"
                 prev_status = prev_hand_status.get(idx, "OPEN")
                 hand_positions.append({'x': hand_px, 'y': hand_py, 'status': status, 'prev_status': prev_status})
                 prev_hand_status[idx] = status
-
         cv2.imshow('MediaPipe Hands', image)
 
         # --- Draw Hands ---
@@ -167,7 +190,7 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
             for hand in hand_positions:
                 dx = hand['x'] - (ux + 45)
                 dy = hand['y'] - (uy + 30)
-                if math.hypot(dx, dy) < catch_distance and hand['status'] == "Closed" and hand['prev_status'] == "OPEN":
+                if math.hypot(dx, dy) < catch_distance and hand['prev_status'] == "OPEN":
                     wrong_sfx.play()
                     lives -=1
                     unwanted_objects[i] = [np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))]
@@ -181,22 +204,28 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
 
             if uy > HEIGHT:
                 unwanted_objects[i] = [np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))]
-        # --- LEVEL UP ---
+        # --- LEVEL UP --- 
         if current_level == 1 and score > 4: 
+            #display the level 
+            screen.blit(font.render("Level 2!", True, (255, 0, 0)), (WIDTH // 2 - 80, HEIGHT // 2))
             current_level = 2
             game_duration -= 10
             fall_speed += 1
-            unwanted_objects = [np.random.randint(100,700)]
+            unwanted_objects.append([np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
+    
+            
         if current_level == 2 and score > 8: 
+            screen.blit(font.render("Level 3!", True, (255, 0, 0)), (WIDTH // 2 - 80, HEIGHT // 2))
             current_level = 3 
             fall_speed += 2 
-            game_duration -= 10 
-            
-        #heart png
+            game_duration -= 10
+            unwanted_objects.append([np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
+
+        #-heart--
         heart_img = pygame.image.load("hear.svg")
         heart_img = pygame.transform.scale(heart_img, (30,30))
         for i in range(lives):
-            screen.blit(heart_img, (10 + 1 * 35, 90))
+            screen.blit(heart_img, (10 + i * 35, 90))
 
 
         # --- Score + Timer ---
@@ -207,10 +236,12 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
         
 
         if remaining <= 0:
+            save_score(player_name, score)
             game_over = font.render("Game Over!", True, (255, 0, 0))
             screen.blit(game_over, (WIDTH // 2 - 80, HEIGHT // 2))
             pygame.display.update()
             pygame.time.wait(3000)
+            show_high_scores()
             break
 
         if current_time - last_speed_update >= speed_increase_interval:
