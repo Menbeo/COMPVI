@@ -14,9 +14,9 @@ pygame.mixer.init()
 bg_sfx = pygame.mixer.Sound("background_music.mp3")
 bg_sfx.set_volume(0.3)
 wrong_sfx = pygame.mixer.Sound("wrong.mp3")
-wrong_sfx.set_volume(0.2)
+wrong_sfx.set_volume(0.3)
 right_sfx = pygame.mixer.Sound("right.mp3")
-right_sfx.set_volume(0.2)
+right_sfx.set_volume(0.3)
 
 # --- Start Background Music ---
 bg_sfx.play(-1)
