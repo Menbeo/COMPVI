@@ -235,7 +235,8 @@ def run_main_game(player_name, selected_profs):
     level2_img = pygame.image.load("level2.png").convert_alpha()
     level3_img = pygame.image.load("level3.png").convert_alpha()
     # Scale images if needed (adjust size to fit your screen)
-    hand_img = pygame.transform.scale(hand_img, (144, 144))  # Điều chỉnh kích thước phù hợp
+    level2_img = pygame.transform.scale(level2_img, (1408, 792))
+    level3_img = pygame.transform.scale(level3_img, (1408, 792))
     
     # Start background music
     bg_sfx.play(-1)
@@ -269,7 +270,7 @@ def run_main_game(player_name, selected_profs):
                 hand_y = int(y9 / sh * HEIGHT)
                 
                 hand_positions.append({'x': hand_x, 'y': hand_y, 'status': status})
-                screen.blit(hand_img, (hand_x - 30, hand_y - 30))  # Trừ đi nửa kích thước để căn giữa
+                pygame.draw.circle(screen, (0, 255, 0), (hand_x, hand_y), 30)
         
         # Update and draw objects
         for obj in objects:
