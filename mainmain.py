@@ -230,14 +230,11 @@ def run_main_game(player_name, selected_profs):
     
     # Initialize objects
     num_objects = 5
-    objects = [[np.random.randint(130, 130), np.random.randint(-600, 0)] for _ in range(num_objects)]
-    unwanted_objects = [[np.random.randint(96, 96), np.random.randint(-600, 0), 0] for _ in range(num_objects)]
+    objects = [[np.random.randint(100, WIDTH-100), np.random.randint(-600, 0)] for _ in range(num_objects)]
+    unwanted_objects = [[np.random.randint(100, WIDTH-100), np.random.randint(-600, 0), 0] for _ in range(num_objects)]
     level2_img = pygame.image.load("level2.png").convert_alpha()
     level3_img = pygame.image.load("level3.png").convert_alpha()
     # Scale images if needed (adjust size to fit your screen)
-    level2_img = pygame.transform.scale(level2_img, (97, 87))
-    level3_img = pygame.transform.scale(level3_img, (97, 87))
-    hand_img = pygame.image.load("hand.png").convert_alpha()
     hand_img = pygame.transform.scale(hand_img, (144, 144))  # Điều chỉnh kích thước phù hợp
     
     # Start background music
