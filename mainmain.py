@@ -22,7 +22,12 @@ BLACK = (0, 0, 0)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Catch Your Professor!")
 clock = pygame.time.Clock()
-font = pygame.font.SysFont('Arial', 32)
+try:
+    font = pygame.font.Font("Minecraft.ttf", 32)
+except:
+    # Fallback to system font if custom font fails to load
+    font = pygame.font.SysFont('Arial', 32)
+    print("Custom font not found, using system font instead")
 
 # Load assets
 def load_image(path, size=None):
@@ -258,12 +263,51 @@ def run_main_game(player_name, selected_profs):
             if not ret:
                 break
             
-            frame = cv2.flip(frame, 1)
-            image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            image.flags.writeable = False
-            results = hands.process(image)
-            image.flags.writeable = True
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            if obj_y > HEIGHT:
+                obj[0] = random.randint(100, WIDTH-100)
+                obj[1] = random.randint(-600, 0)
+        
+        # Update and draw unwanted objects
+        for uw in unwanted_objects:
+            uw_x, uw_y, img_idx = uw
+            screen.blit(unwanted_imgs[img_idx], (uw_x, uw_y))
+            uw[1] += fall_speed
+            
+            # Check collision
+            for hand in hand_positions:
+                dx = hand['x'] - (uw_x + 25)
+                dy = hand['y'] - (uw_y + 25)
+                if math.hypot(dx, dy) < 50:
+                    lives -= 1
+                    wrong_sfx.play()
+                    uw[0] = random.randint(100, WIDTH-100)
+                    uw[1] = random.randint(-600, 0)
+                    break
+            
+            if uw_y > HEIGHT:
+                uw[0] = random.randint(100, WIDTH-100)
+                uw[1] = random.randint(-600, 0)
+        
+       # --- LEVEL UP --- 
+        if current_level == 1 and score > 2: 
+            #display the level 
+            screen.blit(level2_img, (97, 87))
+            pygame.display.update()
+            pygame.time.wait(2000)
+            current_level = 2
+            game_duration -= 10
+            fall_speed += 1
+            unwanted_objects.append([np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
+    
+            
+        if current_level == 2 and score > 8: 
+            screen.blit(level3_img, (97, 87))
+            pygame.display.update()
+            pygame.time.wait(2000)
+            current_level = 3 
+            fall_speed += 2 
+            game_duration -= 10
+            unwanted_objects.append([np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
 
         
             # Hand tracking
@@ -387,13 +431,14 @@ def run_main_game(player_name, selected_profs):
 
 def show_end_screen(score, player_name):
     """Show the end game screen with high scores"""
+    high_score_img = load_image("high_score.png", (602, 339)) 
     # Save score
-    with open("highscores.txt", "a") as f:
+    with open("highs_cores.txt", "a") as f:
         f.write(f"{player_name}:{score}\n")
     
     # Load high scores
     try:
-        with open("highscores.txt", "r") as f:
+        with open("highs_cores.txt", "r") as f:
             scores = [line.strip().split(":") for line in f.readlines()]
             top_scores = sorted(scores, key=lambda x: int(x[1]), reverse=True)[:5]
     except FileNotFoundError:
@@ -405,19 +450,19 @@ def show_end_screen(score, player_name):
         
         # Display player score
         score_text = font.render(f"Your Score: {score}", True, WHITE)
-        screen.blit(score_text, (WIDTH//2 - score_text.get_width()//2, 200))
+        screen.blit(score_text, (650,251))
         
         # Display high scores
-        title = font.render("High Scores:", True, WHITE)
-        screen.blit(title, (WIDTH//2 - title.get_width()//2, 250))
+        # title = font.render("High Scores:", True, WHITE)
+        screen.blit(high_score_img, (587,-1))
         
         for i, (name, score) in enumerate(top_scores):
             entry = font.render(f"{i+1}. {name}: {score}", True, WHITE)
-            screen.blit(entry, (WIDTH//2 - entry.get_width()//2, 300 + i*40))
+            screen.blit(entry, (804, 286 + i*40))
         
         # Display continue prompt
         continue_text = font.render("Click anywhere to continue...", True, WHITE)
-        screen.blit(continue_text, (WIDTH//2 - continue_text.get_width()//2, HEIGHT-100))
+        screen.blit(continue_text, (650,603))
         
         # Event handling
         for event in pygame.event.get():

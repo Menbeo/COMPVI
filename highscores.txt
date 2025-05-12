@@ -13,3 +13,6 @@ mm:0
 heh:1
 mm:2
 hhhh:11
+haha:4
+kk:1
+meomeo:9
