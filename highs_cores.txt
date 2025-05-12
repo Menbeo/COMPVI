@@ -7,3 +7,6 @@ kkkk:2
 hoho:9
 kokok:3
 kkk:2
+m:0
+m:0
+ke:0

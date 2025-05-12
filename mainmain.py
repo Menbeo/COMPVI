@@ -259,57 +259,16 @@ def run_main_game(player_name, selected_profs):
                     running = False
             
             # Get camera frame
-            ret, frame = cap.read()
+            ret, image = cap.read()
             if not ret:
                 break
-            
-            if obj_y > HEIGHT:
-                obj[0] = random.randint(100, WIDTH-100)
-                obj[1] = random.randint(-600, 0)
-        
-        # Update and draw unwanted objects
-        for uw in unwanted_objects:
-            uw_x, uw_y, img_idx = uw
-            screen.blit(unwanted_imgs[img_idx], (uw_x, uw_y))
-            uw[1] += fall_speed
-            
-            # Check collision
-            for hand in hand_positions:
-                dx = hand['x'] - (uw_x + 25)
-                dy = hand['y'] - (uw_y + 25)
-                if math.hypot(dx, dy) < 50:
-                    lives -= 1
-                    wrong_sfx.play()
-                    uw[0] = random.randint(100, WIDTH-100)
-                    uw[1] = random.randint(-600, 0)
-                    break
-            
-            if uw_y > HEIGHT:
-                uw[0] = random.randint(100, WIDTH-100)
-                uw[1] = random.randint(-600, 0)
-        
-       # --- LEVEL UP --- 
-        if current_level == 1 and score > 2: 
-            #display the level 
-            screen.blit(level2_img, (97, 87))
-            pygame.display.update()
-            pygame.time.wait(2000)
-            current_level = 2
-            game_duration -= 10
-            fall_speed += 1
-            unwanted_objects.append([np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
-    
-            
-        if current_level == 2 and score > 8: 
-            screen.blit(level3_img, (97, 87))
-            pygame.display.update()
-            pygame.time.wait(2000)
-            current_level = 3 
-            fall_speed += 2 
-            game_duration -= 10
-            unwanted_objects.append([np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
 
-        
+            image = cv2.flip(image, 1)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image.flags.writeable = False
+            results = hands.process(image)
+            image.flags.writeable = True
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             # Hand tracking
             hand_positions = []
             if results.multi_hand_landmarks:
@@ -319,20 +278,20 @@ def run_main_game(player_name, selected_profs):
                     x12 = hand_landmarks.landmark[12].x * sw
                     y12 = hand_landmarks.landmark[12].y * sh
                     
-                    hand_landmarks.landmark[12].y * sh                
+                    hand_landmarks.landmark[12].y * sh      
                     status = "Closed" if y12 > y9 else "OPEN"
                     prev_status = prev_hand_status.get(idx, "OPEN")
                     hand_x = int(x9 / sw * WIDTH)
                     hand_y = int(y9 / sh * HEIGHT)
+                    cv2.circle(image, (int(x9), int(y9)), 10, (0,255,0), -1)
+                    cv2.circle(image, (int(x12), int(y12)), 10, (0,0,255), -1)
                     
                     hand_positions.append({'x': hand_x, 'y': hand_y, 'status': status, 'prev_status': prev_status})
                     prev_hand_status[idx] = status
-                    cv2.putText(image, status, (int(x9), int(y9 - 10)), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0,255, 0) if status == "Closed" else (0,0,255),2)
-                    #---Show vid--
-                    cv2.imshow('MediaPipe Hands', image)
-                    
                     pygame.draw.circle(screen, (0, 255, 0), (hand_x, hand_y), 30)
-            
+                    #---Show vid--
+            cv2.imshow('MediaPipe Hands', image)
+                      
         # Update and draw objects
             for obj in objects:
                 obj_x, obj_y = obj
@@ -351,9 +310,9 @@ def run_main_game(player_name, selected_profs):
                         obj[1] = random.randint(-600, 0)
                         break
                 
-                if obj_y > HEIGHT:
-                    obj[0] = random.randint(100, WIDTH-100)
-                    obj[1] = random.randint(-600, 0)
+                    if obj_y > HEIGHT:
+                        obj[0] = random.randint(100, WIDTH-100)
+                        obj[1] = random.randint(-600, 0)
             
             # Update and draw unwanted objects
             for uw in unwanted_objects:
@@ -365,7 +324,7 @@ def run_main_game(player_name, selected_profs):
                 for hand in hand_positions:
                     dx = hand['x'] - (uw_x + 25)
                     dy = hand['y'] - (uw_y + 25)
-                    if math.hypot(dx, dy) < 50:
+                    if math.hypot(dx, dy) < 50 and hand['status'] == "Closed" or hand['status'] == "OPEN":
                         lives -= 1
                         wrong_sfx.play()
                         uw[0] = random.randint(100, WIDTH-100)
