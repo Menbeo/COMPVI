@@ -10,3 +10,13 @@ kkk:2
 m:0
 m:0
 ke:0
+xxx:0
+m:0
+x:0
+xx:0
+xx:0
+xx:0
+x:1
+m:0
+x:0
+kkk:0
