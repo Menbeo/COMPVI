@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 kjhg,0
 llll,0
 ll,0
@@ -13,3 +14,8 @@ ll,1
 ll,0
 jjj,-1
 llll,-2
+=======
+mm:19
+m:17
+m:20
+>>>>>>> Stashed changes

@@ -181,6 +181,7 @@ def run_main_game(player_name, selected_profs):
     
     # Start background music
     bg_sfx.play(-1)
+<<<<<<< Updated upstream
     
     running = True
     while running:
@@ -227,6 +228,105 @@ def run_main_game(player_name, selected_profs):
                 if math.hypot(dx, dy) < 50 and hand['status'] == "Closed":
                     score += 1
                     right_sfx.play()
+=======
+
+# --- MediaPipe Hands ---
+    with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
+        running = True
+        prev_hand_status = {}
+
+        while running:
+            screen.blit(background, (0, 0))
+
+             # --- Handle Pygame Events ---
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+            # Get camera frame
+            ret, image = cap.read()
+            if not ret:
+                break
+
+            image = cv2.flip(image, 1)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image.flags.writeable = False
+            results = hands.process(image) 
+            image.flags.writeable = True
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            # Hand tracking
+            hand_positions = []
+
+            if results.multi_hand_landmarks:
+                for idx, hand_landmarks in enumerate(results.multi_hand_landmarks):
+                    x9 = hand_landmarks.landmark[9].x * sw
+                    y9 = hand_landmarks.landmark[9].y * sh
+                    x12 = hand_landmarks.landmark[12].x * sw
+                    y12 = hand_landmarks.landmark[12].y * sh
+
+                    hand_x = int(x9 / sw * WIDTH)
+                    hand_y = int(y9 / sh * HEIGHT)
+
+                    status = "Closed" if y12 > y9 else "OPEN"
+                    prev_status = prev_hand_status.get(idx, "OPEN") #mac dinh
+
+
+                    cv2.circle(image, (int(x12), int(y12)), 10, (0,0,255), -1)
+
+                    hand_positions.append({
+                        'x': hand_x, 
+                        'y': hand_y, 
+                        'status': status, 
+                        'prev_status': prev_status,
+                        'index': hand_landmarks
+                        })
+                    
+                    #cập nhật trạng thái mới nhất
+                    prev_hand_status[idx] = status
+
+                    #vẽ tay
+                    cv2.circle(image, (int(x9), int(y9)), 10, (0, 255, 0), -1)
+                    cv2.circle(image, (int(x12), int(y12)), 10, (0,0,255), -1)
+                    cv2.putText(image, status, (int(x9), int(y9 - 20)), 0, 1, (255, 0, 0), 2)
+
+                    #---Show vid--
+                cv2.imshow('MediaPipe Hands', image)
+                # if cv2.waitKey(1) & 0xFF == 27:  # ESC to quit
+                #     break
+
+                #dummy hand on game screen
+                pygame.draw.circle(screen, (0, 255, 0), (hand_x, hand_y), 30)
+                for hand in hand_positions:
+                    pygame.draw.circle(screen, (0, 255, 0), (hand['x'], hand['y']), 30)
+
+
+            # Update and draw objects
+            for obj in objects:
+                obj_x, obj_y = obj
+                prof_img = random.choice(selected_profs)
+                screen.blit(prof_img, (obj_x, obj_y))
+                obj[1] += fall_speed
+
+                # Check collision
+                for hand in hand_positions:
+                    dx = hand['x'] - (obj_x + 25)
+                    dy = hand['y'] - (obj_y + 25)
+                    distance = math.hypot(dx, dy)
+
+                    if (
+                    hand['status'] == "Closed" and
+                    hand['prev_status'] == "OPEN"
+                    ):
+                        if math.hypot(dx, dy) < 200:
+                            score += 1
+                            right_sfx.play()
+                            obj[0] = random.randint(100, WIDTH-100)
+                            obj[1] = random.randint(-600, 0)
+                        break
+
+                if obj_y > HEIGHT:
+>>>>>>> Stashed changes
                     obj[0] = random.randint(100, WIDTH-100)
                     obj[1] = random.randint(-600, 0)
                     break
@@ -305,7 +405,7 @@ def show_end_screen(score, player_name):
     try:
         with open("highscores.txt", "r") as f:
             scores = [line.strip().split(":") for line in f.readlines()]
-            top_scores = sorted(scores, key=lambda x: int(x[1]), reverse=True)[:5]
+            top_scores = sorted(scores, key=lambda x: x[1], reverse=True)[:5]
     except FileNotFoundError:
         top_scores = []
     
