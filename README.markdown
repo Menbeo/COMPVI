@@ -37,60 +37,10 @@ To run the game, you need:
    pip install pygame opencv-python mediapipe numpy
    ```
 
-4. **Prepare Assets**:
-   - Ensure the `assets/` folder is in the same directory as `main.py`.
-   - The folder structure should be:
-     ```
-     catch-your-professor/
-     ├── main.py
-     ├── high_scores.txt  # Created automatically if not present
-     ├── assets/
-     │   ├── images/
-     │   │   ├── bg.png
-     │   │   ├── welcome.png
-     │   │   ├── next.png
-     │   │   ├── start.png
-     │   │   ├── endgame.png
-     │   │   ├── heart.png
-     │   │   ├── fscore.png
-     │   │   ├── entername_text.png
-     │   │   ├── selectprof_text.png
-     │   │   ├── out_time.png
-     │   │   ├── out_lives.png
-     │   │   ├── hand.png
-     │   │   ├── linhhuynh.png
-     │   │   ├── linhhuynh_unselected.png
-     │   │   ├── quanle.png
-     │   │   ├── quanle_unselected.png
-     │   │   ├── duongphung.png
-     │   │   ├── duongphung_unselected.png
-     │   │   ├── linhtran.png
-     │   │   ├── linhtran_unselected.png
-     │   │   ├── readyscreen.png
-     │   │   ├── namebar.png
-     │   │   ├── linhhuynh_name.png
-     │   │   ├── quanle_name.png
-     │   │   ├── duongphung_name.png
-     │   │   ├── linhtran_name.png
-     │   │   ├── level2.png
-     │   │   ├── level3.png
-     │   │   ├── high_score.png
-     │   ├── sounds/
-     │   │   ├── background_music.mp3
-     │   │   ├── wrong.mp3
-     │   │   ├── right.mp3
-     │   │   ├── scenelevel3.mp3
-     │   │   ├── Mười điểm 10 - Ông Yanbi.mp3
-     │   │   ├── highscore.mp3
-     │   │   ├── waiting.mp3
-     ├── Minecraft.ttf  # Optional custom font
-     ```
-   - If you don’t have the assets, replace them with placeholder images/sounds or modify the code to use different files.
-
-5. **Optional: Custom Font**:
+4. **Optional: Custom Font**:
    - The game uses `Minecraft.ttf` for text rendering. Place this font file in the project root, or the game will fall back to the system’s Arial font.
 
-6. **Run the Game**:
+5. **Run the Game**:
    ```bash
    python main.py
    ```
