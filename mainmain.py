@@ -239,134 +239,151 @@ def run_main_game(player_name, selected_profs):
     level3_img = pygame.transform.scale(level3_img, (1408, 792))
     
     # Start background music
+    # Initialize MediaPipe
+    mp_hands = mp.solutions.hands
+    
     bg_sfx.play(-1)
-    
-    running = True
-    while running:
-        screen.blit(background, (0, 0))
-        
-        # Get camera frame
-        ret, frame = cap.read()
-        if not ret:
-            continue
+    with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
+        running = True
+        prev_hand_status = {}
+        while running:
+            screen.blit(background, (0, 0))
             
-        frame = cv2.flip(frame, 1)
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        image.flags.writeable = False
-        results = hands.process(image)
-        image.flags.writeable = True
-        
-        # Hand tracking
-        hand_positions = []
-        if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
-                x9 = int(hand_landmarks.landmark[9].x * sw)
-                y9 = int(hand_landmarks.landmark[9].y * sh)
-                x12 = int(hand_landmarks.landmark[12].x * sw)
-                y12 = int(hand_landmarks.landmark[12].y * sh)
-                
-                status = "Closed" if y12 > y9 else "OPEN"
-                hand_x = int(x9 / sw * WIDTH)
-                hand_y = int(y9 / sh * HEIGHT)
-                
-                hand_positions.append({'x': hand_x, 'y': hand_y, 'status': status})
-                pygame.draw.circle(screen, (0, 255, 0), (hand_x, hand_y), 30)
-        
-        # Update and draw objects
-        for obj in objects:
-            obj_x, obj_y = obj
-            prof_img = random.choice(selected_profs)
-            screen.blit(prof_img, (obj_x, obj_y))
-            obj[1] += fall_speed
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
             
-            # Check collision
-            for hand in hand_positions:
-                dx = hand['x'] - (obj_x + 25)
-                dy = hand['y'] - (obj_y + 25)
-                if math.hypot(dx, dy) < 50 and hand['status'] == "Closed":
-                    score += 1
-                    right_sfx.play()
-                    obj[0] = random.randint(100, WIDTH-100)
-                    obj[1] = random.randint(-600, 0)
-                    break
+            # Get camera frame
+            ret, frame = cap.read()
+            if not ret:
+                break
             
-            if obj_y > HEIGHT:
-                obj[0] = random.randint(100, WIDTH-100)
-                obj[1] = random.randint(-600, 0)
-        
-        # Update and draw unwanted objects
-        for uw in unwanted_objects:
-            uw_x, uw_y, img_idx = uw
-            screen.blit(unwanted_imgs[img_idx], (uw_x, uw_y))
-            uw[1] += fall_speed
-            
-            # Check collision
-            for hand in hand_positions:
-                dx = hand['x'] - (uw_x + 25)
-                dy = hand['y'] - (uw_y + 25)
-                if math.hypot(dx, dy) < 50:
-                    lives -= 1
-                    wrong_sfx.play()
-                    uw[0] = random.randint(100, WIDTH-100)
-                    uw[1] = random.randint(-600, 0)
-                    break
-            
-            if uw_y > HEIGHT:
-                uw[0] = random.randint(100, WIDTH-100)
-                uw[1] = random.randint(-600, 0)
-        
-       # --- LEVEL UP --- 
-        if current_level == 1 and score > 4: 
-            #display the level 
-            screen.blit(level2_img, (97, 87))
-            pygame.display.update()
-            pygame.time.wait(2000)
-            current_level = 2
-            game_duration -= 10
-            fall_speed += 1
-            unwanted_objects.append([np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
-    
-            
-        if current_level == 2 and score > 8: 
-            screen.blit(level2_img, (1065, -1536))
-            pygame.display.update()
-            pygame.time.wait(2000)
-            current_level = 3 
-            fall_speed += 2 
-            game_duration -= 10
-            unwanted_objects.append([np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
+            frame = cv2.flip(frame, 1)
+            image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            image.flags.writeable = False
+            results = hands.process(image)
+            image.flags.writeable = True
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
         
-        # Display UI
-        for i in range(lives):
-            screen.blit(heart_img, (10 + i * 35, 10))
+            # Hand tracking
+            hand_positions = []
+            if results.multi_hand_landmarks:
+                for idx,hand_landmarks in enumerate(results.multi_hand_landmarks):
+                    x9 = hand_landmarks.landmark[9].x * sw
+                    y9 = hand_landmarks.landmark[9].y * sh
+                    x12 = hand_landmarks.landmark[12].x * sw
+                    y12 = hand_landmarks.landmark[12].y * sh
+                    
+                    hand_landmarks.landmark[12].y * sh                
+                    status = "Closed" if y12 > y9 else "OPEN"
+                    prev_status = prev_hand_status.get(idx, "OPEN")
+                    hand_x = int(x9 / sw * WIDTH)
+                    hand_y = int(y9 / sh * HEIGHT)
+                    
+                    hand_positions.append({'x': hand_x, 'y': hand_y, 'status': status, 'prev_status': prev_status})
+                    prev_hand_status[idx] = status
+                    cv2.putText(image, status, (int(x9), int(y9 - 10)), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0,255, 0) if status == "Closed" else (0,0,255),2)
+                    #---Show vid--
+                    cv2.imshow('MediaPipe Hands', image)
+                    
+                    pygame.draw.circle(screen, (0, 255, 0), (hand_x, hand_y), 30)
+            
+        # Update and draw objects
+            for obj in objects:
+                obj_x, obj_y = obj
+                prof_img = random.choice(selected_profs)
+                screen.blit(prof_img, (obj_x, obj_y))
+                obj[1] += fall_speed
+                
+                # Check collision
+                for hand in hand_positions:
+                    dx = hand['x'] - (obj_x + 25)
+                    dy = hand['y'] - (obj_y + 25)
+                    if math.hypot(dx, dy) < 50 and hand['status'] == "Closed" and hand['prev_status'] == "OPEN":
+                        score += 1
+                        right_sfx.play()
+                        obj[0] = random.randint(100, WIDTH-100)
+                        obj[1] = random.randint(-600, 0)
+                        break
+                
+                if obj_y > HEIGHT:
+                    obj[0] = random.randint(100, WIDTH-100)
+                    obj[1] = random.randint(-600, 0)
+            
+            # Update and draw unwanted objects
+            for uw in unwanted_objects:
+                uw_x, uw_y, img_idx = uw
+                screen.blit(unwanted_imgs[img_idx], (uw_x, uw_y))
+                uw[1] += fall_speed
+                
+                # Check collision
+                for hand in hand_positions:
+                    dx = hand['x'] - (uw_x + 25)
+                    dy = hand['y'] - (uw_y + 25)
+                    if math.hypot(dx, dy) < 50:
+                        lives -= 1
+                        wrong_sfx.play()
+                        uw[0] = random.randint(100, WIDTH-100)
+                        uw[1] = random.randint(-600, 0)
+                        break
+                
+                if uw_y > HEIGHT:
+                    uw[0] = random.randint(100, WIDTH-100)
+                    uw[1] = random.randint(-600, 0)
+            
+        # --- LEVEL UP --- 
+            if current_level == 1 and score > 4: 
+                #display the level 
+                screen.blit(level2_img, (97, 87))
+                pygame.display.update()
+                pygame.time.wait(2000)
+                current_level = 2
+                game_duration -= 10
+                fall_speed += 1
+                unwanted_objects.append([np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
         
-        current_time = int(time.time() - start_time)
-        remaining = max(0, game_duration - current_time)
-        
-        score_text = font.render(f"Score: {score}", True, BLACK)
-        time_text = font.render(f"Time: {remaining}s", True, BLACK)
-        level_text = font.render(f"Level: {current_level}", True, BLACK)
-        
-        screen.blit(score_text, (10, 50))
-        screen.blit(time_text, (10, 90))
-        screen.blit(level_text, (10, 130))
-        
-        # Check game over
-        if remaining <= 0 or lives <= 0:
-            running = False
-        
-        # Event handling
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+                
+            if current_level == 2 and score > 8: 
+                screen.blit(level2_img, (1065, -1536))
+                pygame.display.update()
+                pygame.time.wait(2000)
+                current_level = 3 
+                fall_speed += 2 
+                game_duration -= 10
+                unwanted_objects.append([np.random.randint(100, 700), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
+
+            
+            # Display UI
+            for i in range(lives):
+                screen.blit(heart_img, (10 + i * 35, 10))
+            
+            current_time = int(time.time() - start_time)
+            remaining = max(0, game_duration - current_time)
+            
+            score_text = font.render(f"Score: {score}", True, BLACK)
+            time_text = font.render(f"Time: {remaining}s", True, BLACK)
+            level_text = font.render(f"Level: {current_level}", True, BLACK)
+            
+            screen.blit(score_text, (10, 50))
+            screen.blit(time_text, (10, 90))
+            screen.blit(level_text, (10, 130))
+            
+            # Check game over
+            if remaining <= 0 or lives <= 0:
                 running = False
-                return "quit"
+            
+            # Event handling
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    return "quit"
+            
+            pygame.display.flip()
+            clock.tick(FPS)
         
-        pygame.display.flip()
-        clock.tick(FPS)
-    
-    bg_sfx.stop()
-    return "end", score, player_name
+        bg_sfx.stop()
+        return "end", score, player_name
 
 def show_end_screen(score, player_name):
     """Show the end game screen with high scores"""
