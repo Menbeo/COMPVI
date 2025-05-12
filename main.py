@@ -46,7 +46,7 @@ def load_sound(path, volume=1.0):
 try:
     background = load_image("bg.png", (WIDTH, HEIGHT))
     guide_img = load_image("welcome.png", (WIDTH, HEIGHT))
-    next_img = load_image("next.png", (120, 50))
+    next_img = load_image("next.png", (106, 60))
     start_img = load_image("start.png", (143, 80))
     endgame_img = load_image("endgame.png", (WIDTH, HEIGHT))
     heart_img = load_image("heart.png", (30, 30))
@@ -55,6 +55,9 @@ try:
     name_enter = pygame.transform.scale(name_enter, (389, 219))
     selectprof_text = pygame.image.load("selectprof_text.png").convert_alpha() 
     selectprof_text = pygame.transform.scale(selectprof_text, (547, 308))
+    out_time = load_image("out_time.png", (WIDTH, HEIGHT))
+    out_lives = load_image("out_lives.png", (WIDTH, HEIGHT))
+    hand_img = load_image("hand.png", (89,89))
     
     # Professor assets
     professor_images = {
@@ -291,8 +294,12 @@ def run_main_game(player_name, selected_profs):
 
                     #---Show vid--
                 # cv2.imshow('MediaPipe Hands', image)
+                hand_img_width, hand_img_height = hand_img.get_size()
+                hand_offset_x = hand_img_width // 2
+                hand_offset_y = hand_img_height // 2
+
                 for hand in hand_positions:
-                    pygame.draw.circle(screen, (0, 255, 0), (hand['x'], hand['y']), 30)
+                    screen.blit(hand_img, (hand['x'] - hand_offset_x, hand['y'] - hand_offset_y))
 
             # Update and draw objects
             for obj in objects:
@@ -353,7 +360,7 @@ def run_main_game(player_name, selected_profs):
 
             if current_level == 2 and score > 20:
                 level3_sfx.play()
-                screen.blit(level3_img, (1065, -1536))
+                screen.blit(level3_img, (97, 87))
                 pygame.display.update()
                 pygame.time.wait(2000)
                 current_level = 3
@@ -378,8 +385,14 @@ def run_main_game(player_name, selected_profs):
             screen.blit(level_text, (10, 130))
 
             # Check game over
-            if remaining <= 0 or lives <= 0:
+            if remaining <= 0:
                 running = False
+                screen.blit(out_time, (0, 0))
+                pygame.time.wait(5000)
+            if lives <= 0:
+                screen.blit(out_lives, (0, 0))
+                running = False
+                pygame.time.wait(3000)
 
             # Event handling
             for event in pygame.event.get():
@@ -400,13 +413,27 @@ def show_end_screen(score, player_name):
     with open("high_scores.txt", "a") as f:
         f.write(f"{player_name}:{score}\n")
     
-    # Load high scores
     try:
         with open("high_scores.txt", "r") as f:
-            scores = [line.strip().split(":") for line in f.readlines()]
+            scores = []
+            for line in f.readlines():
+                # Remove whitespace and split by colon
+                parts = line.strip().split(":")
+                # Check if the line has exactly two parts and the score is a valid integer
+                if len(parts) == 2 and parts[1].isdigit():
+                    scores.append(parts)
+            # Sort by score (converted to integer) in descending order, take top 5
             top_scores = sorted(scores, key=lambda x: int(x[1]), reverse=True)[:5]
     except FileNotFoundError:
         top_scores = []
+
+    # # Load high scores
+    # try:
+    #     with open("high_scores.txt", "r") as f:
+    #         scores = [line.strip().split(":") for line in f.readlines()]
+    #         top_scores = sorted(scores, key=lambda x: (x[1]), reverse=True)[:5]
+    # except FileNotFoundError:
+    #     top_scores = []
     
     # Display loop
     while True:
@@ -414,7 +441,7 @@ def show_end_screen(score, player_name):
         
         # Display player score
         score_text = font.render(f"Your Score: {score}", True, WHITE)
-        screen.blit(score_text, (650,251))
+        screen.blit(score_text, (780,251))
         
         screen.blit(high_score_img, (587,-1))
         
@@ -452,6 +479,8 @@ def main():
             waiting_sfx.stop()
             result = run_main_game(player_name, selected_profs)
             if result == "quit":
+                # screen.blit(out_time, (0, 0))
+                # pygame.time.wait(2000)
                 break
             state, score, player_name = result
         elif state == "end":
