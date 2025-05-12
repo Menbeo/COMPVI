@@ -42,3 +42,5 @@ m:22
 okoko:0
 koko:17
 mmm:11
+ooo:21
+ok:20

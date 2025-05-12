@@ -246,7 +246,17 @@ def run_main_game(player_name, selected_profs):
     waiting_sfx.stop()
     # Initialize objects
     num_objects = 5
-    objects = [[np.random.randint(100, WIDTH-100), np.random.randint(-600, 0)] for _ in range(num_objects)]
+
+    objects = []
+    for i in range(num_objects):
+        # Cycle through selected_profs using modulo to handle cases where num_objects > len(selected_profs)
+        prof_img = selected_profs[i % len(selected_profs)]
+        objects.append({
+            'x': np.random.randint(100, WIDTH-100),
+            'y': np.random.randint(-600, 0),
+            'prof_img': prof_img
+        })  
+
     unwanted_objects = [[np.random.randint(100, WIDTH-100), np.random.randint(-600, 0), 0] for _ in range(num_objects)]
     level2_img = pygame.image.load("level2.png").convert_alpha()
     level3_img = pygame.image.load("level3.png").convert_alpha()
@@ -302,26 +312,45 @@ def run_main_game(player_name, selected_profs):
                     screen.blit(hand_img, (hand['x'] - hand_offset_x, hand['y'] - hand_offset_y))
 
             # Update and draw objects
+            # for obj in objects:
+            #     obj_x, obj_y = obj
+            #     prof_img = random.choice(selected_profs)
+            #     screen.blit(prof_img, (obj_x, obj_y))
+            #     obj[1] += fall_speed
+
+                        # Update and draw objects
             for obj in objects:
-                obj_x, obj_y = obj
-                prof_img = random.choice(selected_profs)
+                obj_x = obj['x']
+                obj_y = obj['y']
+                prof_img = obj['prof_img']  # Use the assigned professor image
                 screen.blit(prof_img, (obj_x, obj_y))
-                obj[1] += fall_speed
+                obj['y'] += fall_speed
 
                 # Check collision
                 for hand in hand_positions:
                     dx = hand['x'] - (obj_x + 25)
                     dy = hand['y'] - (obj_y + 25)
-                    if math.hypot(dx, dy) < 230 and hand['prev_status'] == "Closed" and hand['status'] == "OPEN":
+                    if math.hypot(dx, dy) < 100 and hand['prev_status'] == "Closed" and hand['status'] == "OPEN":
                         score += 1
                         right_sfx.play()
                         obj[0] = random.randint(100, WIDTH-100)
                         obj[1] = random.randint(-600, 0)
                         break
 
-                if obj_y > HEIGHT:
-                    obj[0] = random.randint(100, WIDTH-100)
-                    obj[1] = random.randint(-600, 0)
+                # if obj_y > HEIGHT:
+                #     obj[0] = random.randint(100, WIDTH-100)
+                #     obj[1] = random.randint(-600, 0)
+
+                if obj['y'] > HEIGHT:
+                    obj['x'] = np.random.randint(100, WIDTH-100)
+                    obj['y'] = np.random.randint(-600, 0)
+                    # Reassign a new professor image to avoid overlap
+                    used_profs = [o['prof_img'] for o in objects if o != obj]
+                    available_profs = [p for p in selected_profs if p not in used_profs]
+                    if available_profs:
+                        obj['prof_img'] = available_profs[0]
+                    else:
+                        obj['prof_img'] = selected_profs[len(used_profs) % len(selected_profs)]
 
             # Update and draw unwanted objects
             for uw in unwanted_objects:
