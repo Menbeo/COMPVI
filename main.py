@@ -337,7 +337,7 @@ def run_main_game(player_name, selected_profs):
                     distance = math.hypot(dx, dy)
 
                     if (
-                    distance < catch_distance and
+                    # distance < catch_distance and
                     hand['status'] == "Closed" and
                     hand['prev_status'] == "OPEN"
                     ):
