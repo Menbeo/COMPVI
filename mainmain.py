@@ -22,7 +22,12 @@ BLACK = (0, 0, 0)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Catch Your Professor!")
 clock = pygame.time.Clock()
-font = pygame.font.SysFont('Arial', 32)
+try:
+    font = pygame.font.Font("Minecraft.ttf", 32)
+except:
+    # Fallback to system font if custom font fails to load
+    font = pygame.font.SysFont('Arial', 32)
+    print("Custom font not found, using system font instead")
 
 # Load assets
 def load_image(path, size=None):
@@ -316,7 +321,7 @@ def run_main_game(player_name, selected_profs):
                 uw[1] = random.randint(-600, 0)
         
        # --- LEVEL UP --- 
-        if current_level == 1 and score > 4: 
+        if current_level == 1 and score > 2: 
             #display the level 
             screen.blit(level2_img, (97, 87))
             pygame.display.update()
@@ -328,7 +333,7 @@ def run_main_game(player_name, selected_profs):
     
             
         if current_level == 2 and score > 8: 
-            screen.blit(level2_img, (1065, -1536))
+            screen.blit(level3_img, (97, 87))
             pygame.display.update()
             pygame.time.wait(2000)
             current_level = 3 
@@ -370,13 +375,14 @@ def run_main_game(player_name, selected_profs):
 
 def show_end_screen(score, player_name):
     """Show the end game screen with high scores"""
+    high_score_img = load_image("high_score.png", (602, 339)) 
     # Save score
-    with open("highscores.txt", "a") as f:
+    with open("highs_cores.txt", "a") as f:
         f.write(f"{player_name}:{score}\n")
     
     # Load high scores
     try:
-        with open("highscores.txt", "r") as f:
+        with open("highs_cores.txt", "r") as f:
             scores = [line.strip().split(":") for line in f.readlines()]
             top_scores = sorted(scores, key=lambda x: int(x[1]), reverse=True)[:5]
     except FileNotFoundError:
@@ -388,19 +394,19 @@ def show_end_screen(score, player_name):
         
         # Display player score
         score_text = font.render(f"Your Score: {score}", True, WHITE)
-        screen.blit(score_text, (WIDTH//2 - score_text.get_width()//2, 200))
+        screen.blit(score_text, (650,251))
         
         # Display high scores
-        title = font.render("High Scores:", True, WHITE)
-        screen.blit(title, (WIDTH//2 - title.get_width()//2, 250))
+        # title = font.render("High Scores:", True, WHITE)
+        screen.blit(high_score_img, (587,-1))
         
         for i, (name, score) in enumerate(top_scores):
             entry = font.render(f"{i+1}. {name}: {score}", True, WHITE)
-            screen.blit(entry, (WIDTH//2 - entry.get_width()//2, 300 + i*40))
+            screen.blit(entry, (804, 286 + i*40))
         
         # Display continue prompt
         continue_text = font.render("Click anywhere to continue...", True, WHITE)
-        screen.blit(continue_text, (WIDTH//2 - continue_text.get_width()//2, HEIGHT-100))
+        screen.blit(continue_text, (650,603))
         
         # Event handling
         for event in pygame.event.get():
