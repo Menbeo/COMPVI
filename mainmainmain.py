@@ -295,7 +295,7 @@ def run_main_game(player_name, selected_profs):
                 for hand in hand_positions:
                     dx = hand['x'] - (obj_x + 25)
                     dy = hand['y'] - (obj_y + 25)
-                    if math.hypot(dx, dy) < 50 and hand['prev_status'] == "Closed" and hand['status'] == "OPEN":
+                    if math.hypot(dx, dy) < 200 and hand['prev_status'] == "Closed" and hand['status'] == "OPEN":
                         score += 1
                         right_sfx.play()
                         obj[0] = random.randint(100, WIDTH-100)
@@ -316,7 +316,7 @@ def run_main_game(player_name, selected_profs):
                 for hand in hand_positions:
                     dx = hand['x'] - (uw_x + 45)
                     dy = hand['y'] - (uw_y + 30)
-                    if math.hypot(dx, dy) < 50:
+                    if math.hypot(dx, dy) < 200:
                         if hand['status'] == "Closed" or hand['status'] == "OPEN":
                             lives -= 1
                             wrong_sfx.play()
@@ -329,7 +329,7 @@ def run_main_game(player_name, selected_profs):
                     uw[1] = random.randint(-600, 0)
 
             # --- LEVEL UP ---
-            if current_level == 1 and score > 4:
+            if current_level == 1 and score > 10:
                 #display the level
                 screen.blit(level2_img, (97, 87))
                 pygame.display.update()
@@ -340,7 +340,7 @@ def run_main_game(player_name, selected_profs):
                 unwanted_objects.append([np.random.randint(100, WIDTH-100), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
 
 
-            if current_level == 2 and score > 8:
+            if current_level == 2 and score > 20:
                 screen.blit(level3_img, (1065, -1536))
                 pygame.display.update()
                 pygame.time.wait(2000)
