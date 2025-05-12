@@ -75,9 +75,9 @@ try:
     bg_sfx = load_sound("background_music.mp3", 0.5)
     wrong_sfx = load_sound("wrong.mp3", 0.2)
     right_sfx = load_sound("right.mp3", 0.2)
-    level3_sfx = load_sound("scenelevel3.mp3", 0.2)
-    level2_sfx = load_sound("Mười điểm 10 - Ông Yanbi.mp3", 0.2)
-    highscore_sfx = load_sound("highscore.mp3", 10)
+    level3_sfx = load_sound("scenelevel3.mp3", 0.5)
+    level2_sfx = load_sound("Mười điểm 10 - Ông Yanbi.mp3", 0.5)
+    highscore_sfx = load_sound("highscore.mp3", 20)
     waiting_sfx = load_sound("waiting.mp3", 10)
 
     
@@ -356,6 +356,8 @@ def run_main_game(player_name, selected_profs):
                 game_duration -= 10
                 fall_speed += 1
                 unwanted_objects.append([np.random.randint(100, WIDTH-100), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
+                
+
 
 
             if current_level == 2 and score > 20:
@@ -367,8 +369,17 @@ def run_main_game(player_name, selected_profs):
                 fall_speed += 2
                 game_duration -= 10
                 unwanted_objects.append([np.random.randint(100, WIDTH-100), np.random.randint(-600, 0), np.random.randint(0, len(unwanted_imgs))])
-
-
+                if current_level >= 2 and game_duration  == 0:
+                    running = False
+                    screen.blit(out_time, (0, 0))
+                    pygame.display.update()
+                    pygame.time.wait(3000)
+                if current_level >= 2 and lives  == 0:
+                    running = False
+                    screen.blit(out_lives, (0, 0))
+                    pygame.display.update()
+                    pygame.time.wait(3000)
+                    
             # Display UI
             for i in range(lives):
                 screen.blit(heart_img, (10 + i * 35, 10))
@@ -388,10 +399,12 @@ def run_main_game(player_name, selected_profs):
             if remaining <= 0:
                 running = False
                 screen.blit(out_time, (0, 0))
+                pygame.display.update()
                 pygame.time.wait(5000)
             if lives <= 0:
-                screen.blit(out_lives, (0, 0))
                 running = False
+                screen.blit(out_lives, (0, 0))
+                pygame.display.update()
                 pygame.time.wait(3000)
 
             # Event handling
@@ -408,6 +421,7 @@ def run_main_game(player_name, selected_profs):
 def show_end_screen(score, player_name):
     """Show the end game screen with high scores"""
     high_score_img = load_image("high_score.png", (602, 339)) 
+    level3_sfx.stop()
     highscore_sfx.play(-1)
     # Save score
     with open("high_scores.txt", "a") as f:
