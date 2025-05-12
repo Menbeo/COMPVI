@@ -69,9 +69,14 @@ try:
     }
     
     # Load sounds
-    bg_sfx = load_sound("background_music.mp3", 0.3)
+    bg_sfx = load_sound("background_music.mp3", 0.5)
     wrong_sfx = load_sound("wrong.mp3", 0.2)
     right_sfx = load_sound("right.mp3", 0.2)
+    level3_sfx = load_sound("scenelevel3.mp3", 0.2)
+    level2_sfx = load_sound("Mười điểm 10 - Ông Yanbi.mp3", 0.2)
+    highscore_sfx = load_sound("highscore.mp3", 10)
+    waiting_sfx = load_sound("waiting.mp3", 10)
+
     
 except pygame.error as e:
     print(f"Error loading assets: {e}")
@@ -90,8 +95,10 @@ hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5
 # Screen functions
 def show_guide_screen():
     """Show the game guide screen"""
+
     next_rect = next_img.get_rect(bottomright=(WIDTH-20, HEIGHT-20))
-    
+    highscore_sfx.stop()
+    waiting_sfx.play(-1)
     while True:
         screen.blit(guide_img, (0, 0))
         screen.blit(next_img, next_rect)
@@ -104,7 +111,7 @@ def show_guide_screen():
         
         pygame.display.flip()
         clock.tick(FPS)
-
+        
 def show_ready_screen():
     """Show the ready screen with player name input and professor selection"""
     name = ''
@@ -131,6 +138,7 @@ def show_ready_screen():
     
     # Load name images
     name_images = {}
+   
     for i, pos in prof_positions.items():
         try:
             img = pygame.image.load(pos["img"]).convert_alpha()
@@ -138,7 +146,7 @@ def show_ready_screen():
         except:
             print(f"Không tìm thấy ảnh: {pos['img']}")
             name_images[i] = pygame.Surface((120,40), pygame.SRCALPHA)
-
+   
     while True:
         screen.blit(ready_bg, (0, 0))
         
@@ -219,9 +227,9 @@ def show_ready_screen():
                 else:
                     if len(name) < 20:  # Giới hạn độ dài tên
                         name += event.unicode
-        
         pygame.display.flip()
         clock.tick(FPS)
+       
 
 def run_main_game(player_name, selected_profs):
     """Run the main game loop"""
@@ -232,7 +240,7 @@ def run_main_game(player_name, selected_profs):
     current_level = 1
     start_time = time.time()
     game_duration = 45
-
+    waiting_sfx.stop()
     # Initialize objects
     num_objects = 5
     objects = [[np.random.randint(100, WIDTH-100), np.random.randint(-600, 0)] for _ in range(num_objects)]
@@ -246,7 +254,7 @@ def run_main_game(player_name, selected_profs):
     # Start background music
     # Initialize MediaPipe
     mp_hands = mp.solutions.hands
-
+    
     bg_sfx.play(-1)
     with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
         running = True
@@ -330,6 +338,7 @@ def run_main_game(player_name, selected_profs):
 
             # --- LEVEL UP ---
             if current_level == 1 and score > 10:
+                level2_sfx.play()
                 #display the level
                 screen.blit(level2_img, (97, 87))
                 pygame.display.update()
@@ -341,6 +350,7 @@ def run_main_game(player_name, selected_profs):
 
 
             if current_level == 2 and score > 20:
+                level3_sfx.play()
                 screen.blit(level3_img, (1065, -1536))
                 pygame.display.update()
                 pygame.time.wait(2000)
@@ -383,6 +393,7 @@ def run_main_game(player_name, selected_profs):
 def show_end_screen(score, player_name):
     """Show the end game screen with high scores"""
     high_score_img = load_image("high_score.png", (602, 339)) 
+    highscore_sfx.play(-1)
     # Save score
     with open("highs_cores.txt", "a") as f:
         f.write(f"{player_name}:{score}\n")
@@ -422,6 +433,7 @@ def show_end_screen(score, player_name):
         
         pygame.display.flip()
         clock.tick(FPS)
+    
 
 # Main game loop
 def main():
@@ -429,13 +441,13 @@ def main():
     player_name = ""
     selected_profs = []
     score = 0
-    
     while True:
         if state == "guide":
             state = show_guide_screen()
         elif state == "ready":
             state, player_name, selected_profs = show_ready_screen()
         elif state == "main":
+            waiting_sfx.stop()
             result = run_main_game(player_name, selected_profs)
             if result == "quit":
                 break
