@@ -240,8 +240,8 @@ def run_main_game(player_name, selected_profs):
     level2_img = pygame.image.load("level2.png").convert_alpha()
     level3_img = pygame.image.load("level3.png").convert_alpha()
     # Scale images if needed (adjust size to fit your screen)
-    level2_img = pygame.transform.scale(level2_img, (1408, 792))
-    level3_img = pygame.transform.scale(level3_img, (1408, 792))
+    level2_img = pygame.transform.scale(level2_img, (955, 537))
+    level3_img = pygame.transform.scale(level3_img, (955, 537))
 
     # Start background music
     # Initialize MediaPipe
@@ -280,10 +280,12 @@ def run_main_game(player_name, selected_profs):
                     prev_status = prev_hand_status.get(idx, "OPEN")
                     hand_positions.append({'x': hand_x, 'y': hand_y, 'status': status, 'prev_status': prev_status})
                     prev_hand_status[idx] = status
+
                     #---Show vid--
-                cv2.imshow('MediaPipe Hands', image)
+                # cv2.imshow('MediaPipe Hands', image)
                 for hand in hand_positions:
                     pygame.draw.circle(screen, (0, 255, 0), (hand['x'], hand['y']), 30)
+
             # Update and draw objects
             for obj in objects:
                 obj_x, obj_y = obj
@@ -295,7 +297,7 @@ def run_main_game(player_name, selected_profs):
                 for hand in hand_positions:
                     dx = hand['x'] - (obj_x + 25)
                     dy = hand['y'] - (obj_y + 25)
-                    if math.hypot(dx, dy) < 200 and hand['prev_status'] == "Closed" and hand['status'] == "OPEN":
+                    if math.hypot(dx, dy) < 230 and hand['prev_status'] == "Closed" and hand['status'] == "OPEN":
                         score += 1
                         right_sfx.play()
                         obj[0] = random.randint(100, WIDTH-100)
@@ -316,7 +318,7 @@ def run_main_game(player_name, selected_profs):
                 for hand in hand_positions:
                     dx = hand['x'] - (uw_x + 45)
                     dy = hand['y'] - (uw_y + 30)
-                    if math.hypot(dx, dy) < 200:
+                    if math.hypot(dx, dy) < 100:
                         if hand['status'] == "Closed" or hand['status'] == "OPEN":
                             lives -= 1
                             wrong_sfx.play()
@@ -384,12 +386,12 @@ def show_end_screen(score, player_name):
     """Show the end game screen with high scores"""
     high_score_img = load_image("high_score.png", (602, 339)) 
     # Save score
-    with open("highs_cores.txt", "a") as f:
+    with open("high_scores.txt", "a") as f:
         f.write(f"{player_name}:{score}\n")
     
     # Load high scores
     try:
-        with open("highs_cores.txt", "r") as f:
+        with open("high_scores.txt", "r") as f:
             scores = [line.strip().split(":") for line in f.readlines()]
             top_scores = sorted(scores, key=lambda x: int(x[1]), reverse=True)[:5]
     except FileNotFoundError:
