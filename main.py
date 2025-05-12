@@ -330,11 +330,19 @@ def run_main_game(player_name, selected_profs):
                 for hand in hand_positions:
                     dx = hand['x'] - (obj_x + 25)
                     dy = hand['y'] - (obj_y + 25)
-                    if math.hypot(dx, dy) < 100 and hand['prev_status'] == "Closed" and hand['status'] == "OPEN":
+                    if math.hypot(dx, dy) < 230 and hand['prev_status'] == "Closed" and hand['status'] == "OPEN":
                         score += 1
                         right_sfx.play()
-                        obj[0] = random.randint(100, WIDTH-100)
-                        obj[1] = random.randint(-600, 0)
+                        # obj[0] = random.randint(100, WIDTH-100)
+                        # obj[1] = random.randint(-600, 0)
+                        obj['x'] = np.random.randint(100, WIDTH-100)
+                        obj['y'] = np.random.randint(-600, 0)
+                        used_profs = [o['prof_img'] for o in objects if o != obj]
+                        available_profs = [p for p in selected_profs if p not in used_profs]
+                        if available_profs:
+                            obj['prof_img'] = available_profs[0]  # Pick first available
+                        else:
+                            obj['prof_img'] = selected_profs[len(used_profs) % len(selected_profs)]
                         break
 
                 # if obj_y > HEIGHT:

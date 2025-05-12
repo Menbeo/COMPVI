@@ -44,3 +44,5 @@ koko:17
 mmm:11
 ooo:21
 ok:20
+aaaa:4
+m:12
