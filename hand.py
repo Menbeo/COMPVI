@@ -40,12 +40,12 @@ with mp_hands.Hands(
         
         cv2.putText(image, hand_status,(50,80), 0, 1.5, (0,0,255),2)
 
-        # mp_drawing.draw_landmarks(
-        #     image,
-        #     hand_landmarks,
-        #     mp_hands.HAND_CONNECTIONS,
-        #     mp_drawing_styles.get_default_hand_landmarks_style(),
-        #     mp_drawing_styles.get_default_hand_connections_style())
+        mp_drawing.draw_landmarks(
+            image,
+            hand_landmarks,
+            mp_hands.HAND_CONNECTIONS,
+            mp_drawing_styles.get_default_hand_landmarks_style(),
+            mp_drawing_styles.get_default_hand_connections_style())
     cv2.imshow('MediaPipe Hands', image) 
     if cv2.waitKey(5) & 0xFF == 27:
         break

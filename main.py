@@ -1,6 +1,12 @@
 import pygame
+#Pygame is lightweight, Python-based, and ideal for 2D games with simple 
+#rendering (blit) and sound (pygame.mixer).
 import cv2
 import mediapipe as mp
+#MediaPipe provides robust, real-time hand tracking with pre-trained models, 
+# requiring less setup than OpenCV’s manual contour-based methods, and its 
+# landmarks (e.g., wrist, fingertips) are ideal for gesture detection.
+
 import numpy as np
 import sys
 import time
@@ -303,7 +309,7 @@ def run_main_game(player_name, selected_profs):
                     prev_hand_status[idx] = status
 
                     #---Show vid--
-                # cv2.imshow('MediaPipe Hands', image)
+                cv2.imshow('MediaPipe Hands', image)
                 hand_img_width, hand_img_height = hand_img.get_size()
                 hand_offset_x = hand_img_width // 2
                 hand_offset_y = hand_img_height // 2
@@ -424,9 +430,9 @@ def run_main_game(player_name, selected_profs):
             current_time = int(time.time() - start_time)
             remaining = max(0, game_duration - current_time)
 
-            score_text = font.render(f"Score: {score}", True, BLACK)
-            time_text = font.render(f"Time: {remaining}s", True, BLACK)
-            level_text = font.render(f"Level: {current_level}", True, BLACK)
+            score_text = font.render(f"Score: {score}", True, WHITE)
+            time_text = font.render(f"Time: {remaining}s", True, WHITE)
+            level_text = font.render(f"Level: {current_level}", True, WHITE)
 
             screen.blit(score_text, (10, 50))
             screen.blit(time_text, (10, 90))
