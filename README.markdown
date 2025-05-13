@@ -48,10 +48,13 @@ To run the game, you need:
 ## How to Play
 1. **Guide Screen**:
    - The game starts with a welcome screen. Click the "Next" button to proceed.
+   - ![Guide Screen](guide_screen.png)
+
 2. **Ready Screen**:
    - Enter your name (up to 20 characters).
    - Select 1–3 professors by clicking their images. Selected professors will appear as falling objects.
    - Click "Start" to begin the game (enabled only if a name is entered and at least one professor is selected).
+   - ![Guide Screen](ready_screen.png)
 3. **Main Game**:
    - Use your webcam to control a hand cursor (displayed as `hand.png`).
    - Move your hand to align with falling professor images and close your hand (make a fist) to catch them.
@@ -62,9 +65,13 @@ To run the game, you need:
      - **Level 3**: Even faster fall speed, more unwanted objects.
    - You have 3 lives and a 45-second timer (reduced in higher levels).
    - Game ends if time runs out or lives reach zero, showing `out_time.png` or `out_lives.png`.
+   - ![Guide Screen](main_game1.png)
+   - ![Guide Screen](main_game2.png)
+
 4. **End Screen**:
    - Displays your score and the top 5 high scores.
    - Click anywhere to return to the guide screen.
+   - ![Guide Screen](end_game.png)
 
 ## Controls
 - **Mouse**:
