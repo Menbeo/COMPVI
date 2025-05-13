@@ -464,34 +464,27 @@ def show_end_screen(score, player_name):
     with open("high_scores.txt", "a") as f:
         f.write(f"{player_name}:{score}\n")
     
+    newest_score = None
     try:
         with open("high_scores.txt", "r") as f:
             scores = []
             for line in f.readlines():
-                # Remove whitespace and split by colon
                 parts = line.strip().split(":")
-                # Check if the line has exactly two parts and the score is a valid integer
                 if len(parts) == 2 and parts[1].isdigit():
                     scores.append(parts)
-            # Sort by score (converted to integer) in descending order, take top 5
+                    newest_score = parts[1]  # Update with the last valid score
             top_scores = sorted(scores, key=lambda x: int(x[1]), reverse=True)[:5]
     except FileNotFoundError:
         top_scores = []
+        newest_score = str(score)  # Fallback to passed score
 
-    # # Load high scores
-    # try:
-    #     with open("high_scores.txt", "r") as f:
-    #         scores = [line.strip().split(":") for line in f.readlines()]
-    #         top_scores = sorted(scores, key=lambda x: (x[1]), reverse=True)[:5]
-    # except FileNotFoundError:
-    #     top_scores = []
-    
     # Display loop
     while True:
         screen.blit(endgame_img, (0, 0))
         
         # Display player score
-        score_text = font.render(f"Your Score: {score}", True, WHITE)
+
+        score_text = font.render(f"Your Score: {newest_score}", True, WHITE)
         screen.blit(score_text, (780,251))
         
         screen.blit(high_score_img, (587,-1))
